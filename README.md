@@ -72,16 +72,21 @@ The aim of **HomeEase** is to bridge the gap between customers and skilled local
 
 ```bash
 # Clone the project
-git clone https://github.com/yourusername/homeease.git
+git clone https://github.com/bhagyashree2004/homeease.git
 cd homeease
 
 # Setup Frontend
 cd client
 npm install
-npm start
+npm run dev
 
 # Setup Backend
 cd ../server
+npm install
+npm start server
+
+# Setup Admin
+cd admin
 npm install
 npm run dev
 ```
