@@ -105,6 +105,6 @@ npm run dev
 
 ## 📬 Contact
 
-For questions or feedback, feel free to reach out at **bhagyashreeumbarkar140304@email.com**
+For questions or feedback, feel free to reach out at **bhagyashreeumbarkar14304@email.com**
 
 ---
