@@ -7,6 +7,14 @@ const UserDetails = () => {
   const { id } = useParams();
   const location = useLocation();
   const user = location.state?.user; // Get passed user data
+  console.log(user.address);
+  
+
+ const handleClick = () => {
+  console.log("Button clicked");
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${encodeURIComponent(user.address)}`;
+  window.open(mapsUrl, '_blank');
+};
 
   return (
     <div className="max-w-lg bg-white shadow-md rounded-lg p-6 mt-10 ml-15 border">
@@ -27,6 +35,13 @@ const UserDetails = () => {
           <p className="text-lg font-semibold text-gray-700">{user.name}</p>
           <p className="text-gray-600"><b>Contact:</b> {user.contact}</p>
           <p className="text-gray-600"><b>Address:</b> {user.address}</p>
+          <button
+                onClick={handleClick}
+                className="bg-blue-600 text-white px-4 py-2 my-4 rounded"
+          >
+            Get Directions
+
+          </button>
         </div>
       </div>
     ) : (

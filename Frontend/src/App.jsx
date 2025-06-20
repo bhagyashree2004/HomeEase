@@ -15,6 +15,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
 
+import UpiPayment from "./pages/UpiPayment"; // Adjust the path if needed
+
+
+
 
 function App() {
   
@@ -35,6 +39,7 @@ function App() {
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/verify' element={<Verify />} />
+        <Route path="/upi/:appointmentId" element={<UpiPayment />} />
       </Routes>
       <Footer />
       </div>

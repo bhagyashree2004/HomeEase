@@ -91,7 +91,8 @@ const loginUser = async (req, res) => {
 const getProfile = async (req, res) => {
 
     try {
-        const { userId } = req.body
+        // const { userId } = req.body
+        const userId = req.userId;
         const userData = await userModel.findById(userId).select('-password')
 
         res.json({ success: true, userData })
@@ -116,7 +117,8 @@ const updateProfile = async (req, res) => {
 
     try {
 
-        const { userId, name, contact, address, dob, gender } = req.body
+        const userId = req.userId;
+        const { name, contact, address, dob, gender } = req.body
         const imageFile = req.file
 
         if (!name || !contact || !dob || !gender) {
@@ -143,71 +145,214 @@ const updateProfile = async (req, res) => {
 }
 
 // API to book appointment 
+// const bookAppointment = async (req, res) => {
+
+//     try {
+
+//         const { userId, profId, slotDate, slotTime } = req.body
+//         const profData = await professionalModel.findById(profId).select("-password")
+
+//         if (!profData.available) {
+//             return res.json({ success: false, message: 'Professional Not Available' })
+//         }
+
+//         let slots_booked = profData.slots_booked
+
+//         // checking for slot availablity 
+//         if (slots_booked[slotDate]) {
+//             if (slots_booked[slotDate].includes(slotTime)) {
+//                 return res.json({ success: false, message: 'Slot Not Available' })
+//             }
+//             else {
+//                 slots_booked[slotDate].push(slotTime)
+//             }
+//         } else {
+//             slots_booked[slotDate] = []
+//             slots_booked[slotDate].push(slotTime)
+//         }
+
+//         const userData = await userModel.findById(userId).select("-password")
+
+//         delete profData.slots_booked
+
+//         const appointmentData = {
+//             userId,
+//             profId,
+//             userData,
+//             profData,
+//             amount: profData.rates,
+//             slotTime,
+//             slotDate,
+//             date: Date.now()
+//         }
+
+//         const newAppointment = new appointmentModel(appointmentData)
+//         await newAppointment.save()
+
+//         // save new slots data in profData
+//         await professionalModel.findByIdAndUpdate(profId, { slots_booked })
+
+//         res.json({ success: true, message: 'Appointment Booked' })
+
+//     } catch (error) {
+//         console.log(error)
+//         res.json({ success: false, message: error.message })
+//     }
+
+// }
+
+// const bookAppointment = async (req, res) => {
+//     try {
+//         const { userId, profId, slotDate, slotTime } = req.body;
+
+//         // Fetch professional data
+//         const profData = await professionalModel.findById(profId).select("-password");
+
+//         if (!profData) {
+//             return res.json({ success: false, message: 'Professional not found' });
+//         }
+
+//         if (!profData.available) {
+//             return res.json({ success: false, message: 'Professional Not Available' });
+//         }
+
+//         // Handle slot availability
+//         let slots_booked = profData.slots_booked || {};  // Default to an empty object if no slots booked
+
+//         if (slots_booked[slotDate]) {
+//             if (slots_booked[slotDate].includes(slotTime)) {
+//                 return res.json({ success: false, message: 'Slot Not Available' });
+//             } else {
+//                 slots_booked[slotDate].push(slotTime);
+//             }
+//         } else {
+//             slots_booked[slotDate] = [slotTime];  // Create an array with the slotTime if no slots exist for the date
+//         }
+
+//         // Fetch user data
+//         const userData = await userModel.findById(userId).select("-password");
+
+//         if (!userData) {
+//             return res.json({ success: false, message: 'User not found' });
+//         }
+
+//         // Remove unnecessary data from the professional data object
+//         delete profData.slots_booked;
+
+//         // Create the appointment data
+//         const appointmentData = {
+//             userId,
+//             profId,
+//             userData,
+//             profData,
+//             amount: profData.rates,
+//             slotTime,
+//             slotDate,
+//             date: Date.now()
+//         };
+
+//         // Create a new appointment record
+//         const newAppointment = new appointmentModel(appointmentData);
+//         await newAppointment.save();
+
+//         // Update the professional's booked slots
+//         await professionalModel.findByIdAndUpdate(profId, { slots_booked });
+
+//         // Return success response
+//         res.json({ success: true, message: 'Appointment Booked' });
+//     } catch (error) {
+//         console.error(error);
+//         res.json({ success: false, message: error.message });
+//     }
+// };
+
 const bookAppointment = async (req, res) => {
-
     try {
+        const userId = req.userId;
+        const { profId, slotDate, slotTime } = req.body;
 
-        const { userId, profId, slotDate, slotTime } = req.body
-        const profData = await professionalModel.findById(profId).select("-password")
+        // Check if userId and profId are valid
+        // if (!userId || !profId) {
+        //     return res.json({ success: false, message: 'User ID or Professional ID is missing' });
+        // }
+
+        if (!userId || !profId || !slotDate || !slotTime) {
+            return res.json({ success: false, message: 'Missing required fields' });
+        }
+
+        // Fetch professional data
+        const profData = await professionalModel.findById(profId).select("-password");
+
+        if (!profData) {
+            return res.json({ success: false, message: 'Professional not found' });
+        }
 
         if (!profData.available) {
-            return res.json({ success: false, message: 'Professional Not Available' })
+            return res.json({ success: false, message: 'Professional Not Available' });
         }
 
-        let slots_booked = profData.slots_booked
+        // Handle slot availability
+        let slots_booked = profData.slots_booked || {};  // Default to an empty object if no slots booked
 
-        // checking for slot availablity 
         if (slots_booked[slotDate]) {
             if (slots_booked[slotDate].includes(slotTime)) {
-                return res.json({ success: false, message: 'Slot Not Available' })
-            }
-            else {
-                slots_booked[slotDate].push(slotTime)
+                return res.json({ success: false, message: 'Slot Not Available' });
+            } else {
+                slots_booked[slotDate].push(slotTime);  // Add the new slot to the array
             }
         } else {
-            slots_booked[slotDate] = []
-            slots_booked[slotDate].push(slotTime)
+            slots_booked[slotDate] = [slotTime];  // Initialize array if no slots exist for this date
         }
 
-        const userData = await userModel.findById(userId).select("-password")
+        // Fetch user data
+        const userData = await userModel.findById(userId).select("-password");
 
-        delete profData.slots_booked
+        if (!userData) {
+            return res.json({ success: false, message: 'User not found' });
+        }
 
+        // Remove unnecessary data from the professional data object
+        const { slots_booked: _, ...cleanedProfData } = profData.toObject();  // Removing slots_booked to prevent sending unnecessary data
+
+        // Create the appointment data
         const appointmentData = {
             userId,
             profId,
             userData,
-            profData,
+            profData: cleanedProfData,
             amount: profData.rates,
             slotTime,
             slotDate,
-            date: Date.now()
-        }
+            date: Date.now(),
+        };
 
-        const newAppointment = new appointmentModel(appointmentData)
-        await newAppointment.save()
+        // Create a new appointment record
+        const newAppointment = new appointmentModel(appointmentData);
+        await newAppointment.save();
 
-        // save new slots data in profData
-        await professionalModel.findByIdAndUpdate(profId, { slots_booked })
+        // Update the professional's booked slots
+        await professionalModel.findByIdAndUpdate(profId, { slots_booked });
 
-        res.json({ success: true, message: 'Appointment Booked' })
-
+        // Return success response
+        res.json({ success: true, message: 'Appointment Booked' });
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.error("Error in booking appointment:", error);  // Added more context to the error log
+        res.json({ success: false, message: error.message });
     }
+};
 
-}
+
 
 // API to cancel appointment
 const cancelAppointment = async (req, res) => {
     try {
 
-        const { userId, appointmentId } = req.body
+        const userId = req.userId;
+        const { appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
 
         // verify appointment user 
-        if (appointmentData.userId !== userId) {
+        if (appointmentData.userId.toString() !== userId) {
             return res.json({ success: false, message: 'Unauthorized action' })
         }
 
@@ -233,19 +378,44 @@ const cancelAppointment = async (req, res) => {
 }
 
 // API to get user appointments for frontend my-appointments page
+// const listAppointment = async (req, res) => {
+//     try {
+
+//         const { userId } = req.user.id;  //req.body
+//         const appointments = await appointmentModel.find({ userId })
+
+//         res.json({ success: true, appointments })
+
+//     } catch (error) {
+//         console.log(error)
+//         res.json({ success: false, message: error.message })
+//     }
+// }
+
 const listAppointment = async (req, res) => {
     try {
+        // Access userId from req.user (assumed to be set by authUser middleware)
+        const userId = req.userId;  // Corrected line to access the userId
 
-        const { userId } = req.body
-        const appointments = await appointmentModel.find({ userId })
+        // Query the database for appointments related to this userId
+        const appointments = await appointmentModel.find({ userId });
 
-        res.json({ success: true, appointments })
+        // Check if appointments exist, and return them
+        // if (appointments.length > 0) {
+        //     res.json({ success: true, appointments });
+        // } else {
+        //     res.json({ success: false, message: 'No appointments found for this user.' });
+        // }
+
+        res.json({ success: true, appointments });
 
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        // Error handling
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
+
 
 // API to make payment of appointment using razorpay
 const paymentRazorpay = async (req, res) => {
@@ -355,6 +525,22 @@ const verifyStripe = async (req, res) => {
 
 }
 
+
+const getAppointmentById = async (req, res) => {
+  try {
+    const appointment = await appointmentModel.findById(req.params.id); // ✅ FIXED
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+    res.json({ success: true, appointment });
+  } catch (error) {
+    console.error("Error fetching appointment:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
 export {
     loginUser,
     registerUser,
@@ -366,5 +552,6 @@ export {
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,
-    verifyStripe
+    verifyStripe,
+    getAppointmentById 
 }

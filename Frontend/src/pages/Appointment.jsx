@@ -375,7 +375,7 @@ const Appointment = () => {
                 <div className='flex-1 border border-[#ADADAD] rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0'>
                     <p className='text-3xl font-medium text-gray-700'>{profInfo.name}</p>
                     <p className='text-sm text-gray-600 max-w-[700px] mt-1'>{profInfo.about}</p>
-                    <p className='text-gray-600 font-medium mt-4'>Service Charge: {currencySymbol}{profInfo.fees}</p>
+                    <p className='text-gray-600 font-medium mt-4'>Service Charge: {currencySymbol}{profInfo.rates}</p>
                 </div>
             </div>
             <div className='sm:ml-72 sm:pl-4 mt-8 font-medium text-[#565656]'>

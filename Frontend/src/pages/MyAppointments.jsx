@@ -4,6 +4,10 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { assets } from '../assets/assets'
+// import QRCode from 'qrcode.react';
+import QRCode from 'react-qr-code';
+
+
 
 const MyAppointments = () => {
 
@@ -28,32 +32,60 @@ const MyAppointments = () => {
     }
 
     // Getting User Appointments Data Using API
+    // const getUserAppointments = async () => {
+    //     try {
+
+    //         const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { Authorization: `Bearer ${token}` } })
+    //         // setAppointments(data.appointments.reverse())
+    //         console.log("API Response:", data);
+
+    //         if (data?.appointments && Array.isArray(data.appointments)) {
+    //             setAppointments([...data.appointments].reverse()); 
+    //         } else {
+    //             setAppointments([]); // Set an empty array if undefined
+    //             console.error("Appointments data is undefined or not an array");
+    //         }
+
+    //     } catch (error) {
+    //         console.error("Error fetching appointments:", error.response ? error.response.data : error.message);
+    //         toast.error(error.message)
+    //     }
+    // }
+
+
     const getUserAppointments = async () => {
         try {
-
-            const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
-            // setAppointments(data.appointments.reverse())
-            console.log("API Response:", data);
-
+            const { data } = await axios.get(`${backendUrl}/api/user/appointments`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+    
+            console.log("Full API Response:", data);  // Check the full response
+    
+            // Ensure that appointments exist and are an array before proceeding
             if (data?.appointments && Array.isArray(data.appointments)) {
-                setAppointments([...data.appointments].reverse()); 
+                setAppointments([...data.appointments].reverse());  // Reverse if valid
             } else {
-                setAppointments([]); // Set an empty array if undefined
-                console.error("Appointments data is undefined or not an array");
+                // If appointments are not found or the structure is wrong, log the issue
+                console.error("Appointments data is undefined or not an array", data);
+                toast.error("No appointments found or data structure is incorrect.");
+                setAppointments([]);  // Set an empty array if invalid structure
             }
-
         } catch (error) {
-            console.error("Error fetching appointments:", error.response ? error.response.data : error.message);
-            toast.error(error.message)
+            // Handle errors and display messages accordingly
+            console.error("Error fetching appointments:", error.response?.data || error.message);
+            toast.error(error.message);
         }
     }
+    
+
+    
 
     // Function to cancel appointment Using API
     const cancelAppointment = async (appointmentId) => {
 
         try {
 
-            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { Authorization: `Bearer ${token}` } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -83,7 +115,7 @@ const MyAppointments = () => {
                 console.log(response)
 
                 try {
-                    const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { token } });
+                    const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { Authorization: `Bearer ${token}`} });
                     if (data.success) {
                         navigate('/my-appointments')
                         getUserAppointments()
@@ -101,7 +133,7 @@ const MyAppointments = () => {
     // Function to make payment using razorpay
     const appointmentRazorpay = async (appointmentId) => {
         try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { Authorization: `Bearer ${token}` } })
             if (data.success) {
                 initPay(data.order)
             }else{
@@ -116,7 +148,7 @@ const MyAppointments = () => {
     // Function to make payment using stripe
     const appointmentStripe = async (appointmentId) => {
         try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-stripe', { appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/payment-stripe', { appointmentId }, { headers: { Authorization: `Bearer ${token}` } })
             if (data.success) {
                 const { session_url } = data
                 window.location.replace(session_url)
@@ -159,6 +191,48 @@ const MyAppointments = () => {
                             {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && <button onClick={() => setPayment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-900 hover:text-white transition-all duration-300'>Pay Online</button>}
                             {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentStripe(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.stripe_logo} alt="" /></button>}
                             {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentRazorpay(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.razorpay_logo} alt="" /></button>}
+                            {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && <button onClick={() => navigate(`/upi/${item._id}`)} className="text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-900 hover:text-white transition-all duration-300">Pay with UPI</button>}
+  {/* <p className="text-sm mb-2 font-medium">Pay with UPI (Scan or click):</p> */}
+
+  {/* UPI QR Code */}
+  {/* <QRCode
+    value={`upi://pay?pa=bhagyashreeumbarkar14304-1@okhdfcbank&pn=Admin&am=${item.profData.rates}&tn=Appointment with ${item.profData.name}&cu=INR`}
+    size={160}
+  /> */}
+{/* 
+  <div style={{ height: '160px', width: '160px', margin: '0 auto' }}>
+  <QRCode
+    value={`upi://pay?pa=bhagyashreeumbarkar14304-1@okhdfcbank&pn=HomeEase&am=${item.profData.rates}&tn=Appointment with ${item.profData.name}&cu=INR`}
+    style={{ height: '100%', width: '100%' }}
+  />
+</div> */}
+
+{/* <button
+  onClick={() => navigate(`/upi/${item._id}`)}
+  className="className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-900 hover:text-white transition-all duration-300"
+>
+  Pay with UPI
+</button> */}
+
+
+  {/* UPI deep link (in case user is on mobile) */}
+  {/* <a
+    href={`upi://pay?pa=bhagyashreeumbarkar14304-1@okhdfcbank&pn=HomeEase&am=${item.profData.rates}&tn=Appointment with ${item.profData.name}&cu=INR`}
+    className="block mt-2 text-blue-600 underline text-sm"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Open in GPay / PhonePe / Paytm
+  </a> */}
+    {/* <div className="flex justify-center">
+        <button
+            className="mt-2 text-xs text-green-600 underline text-center block"
+            onClick={() => alert('Thank you! We will verify your payment for ' + item.profData.name)}
+        >
+            I have paid
+        </button>
+    </div> */}
+
                             {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-[#696969]  bg-[#EAEFFF]'>Paid</button>}
 
                             {item.isCompleted && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Completed</button>}
@@ -174,3 +248,6 @@ const MyAppointments = () => {
 }
 
 export default MyAppointments
+
+
+
